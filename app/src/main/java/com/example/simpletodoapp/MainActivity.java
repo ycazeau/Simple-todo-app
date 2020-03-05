@@ -16,10 +16,10 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     List<String> items;
-
     Button btnAdd;
     EditText etItem;
     RecyclerView rvItems;
+    ItemsAdapter itemsAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,7 +36,19 @@ public class MainActivity extends AppCompatActivity {
         items.add("Read Bible");
         items.add("Doing exercices");
         items.add("Eat rice and vegetables"  );
-        final ItemsAdapter itemsAdapter = new ItemsAdapter(items);
+
+        ItemsAdapter.OnLongClickListener onLongClickListener = new ItemsAdapter.OnLongClickListener(){
+            @Override
+            public void onItemLongClicked(int position) {
+                // Delete the item from the model
+                items.remove(position);
+                ///Notify the adapter
+                itemsAdapter.notifyItemRemoved(position);
+                Toast.makeText(getApplicationContext(),"Item was removed",Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        itemsAdapter = new ItemsAdapter(items, onLongClickListener);
         rvItems.setAdapter(itemsAdapter);
         rvItems.setLayoutManager(new LinearLayoutManager(this));
 
@@ -49,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
                 //Notify adapter that an item is inserted
                 itemsAdapter.notifyItemInserted(items.size()-1);
                 etItem.setText("");
-                Toast.makeText(getApplicationContext(),"Item was added", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(),"Item was added",Toast.LENGTH_SHORT).show();
 
             }
         });

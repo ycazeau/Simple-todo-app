@@ -1,9 +1,11 @@
 package com.example.simpletodoapp;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.FileUtils;
 import android.util.Log;
@@ -19,6 +21,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+
+    public static final String KEY_ITEM_TEXT = "item_text";
+    public static final String KEY_ITEM_POSITION = "item_text";
+    public static final int EDIT_TEXT_MODE = 20;
 
     List<String> items;
     Button btnAdd;
@@ -38,10 +44,15 @@ public class MainActivity extends AppCompatActivity {
 
         loadItems();
 
-//        items.add("Read Bible");
-//        items.add("Doing exercices");
-//        items.add("Eat rice and vegetables"  );
-
+        ItemsAdapter.OnClickListener onClickListener = new ItemsAdapter.OnClickListener() {
+            @Override
+            public void onItemClicked(int position) {
+                Intent i = new Intent(MainActivity.this,EditActivity.class);
+                i.putExtra(KEY_ITEM_TEXT,items.get(position));
+                i.putExtra(KEY_ITEM_POSITION, position);
+                startActivityForResult(i,EDIT_TEXT_MODE);
+            }
+        };
         ItemsAdapter.OnLongClickListener onLongClickListener = new ItemsAdapter.OnLongClickListener(){
             @Override
             public void onItemLongClicked(int position) {
@@ -54,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        itemsAdapter = new ItemsAdapter(items, onLongClickListener);
+        itemsAdapter = new ItemsAdapter(items, onLongClickListener,onClickListener);
         rvItems.setAdapter(itemsAdapter);
         rvItems.setLayoutManager(new LinearLayoutManager(this));
 
@@ -72,6 +83,25 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (resultCode == RESULT_OK && requestCode ==EDIT_TEXT_MODE){
+            // Retreive the update text value
+            String itemText = data.getStringExtra(KEY_ITEM_TEXT);
+            // Extract the original position of the edited intem from the position Key
+            int position = data.getExtras().getInt(KEY_ITEM_POSITION);
+            //Update the model at the right position with new item text
+            items.set(position, itemText);
+            // Notify the Adapter
+            itemsAdapter.notifyItemChanged(position);
+            // Persist the change
+            saveItems();
+            Toast.makeText(getApplicationContext(), "Item updated succesfully", Toast.LENGTH_SHORT).show();
+        } else {
+            Log.e("MainActivity", "Unknown call to onActivityResult");
+        }
     }
 
     private File getDataFile(){
